@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteRepositoriesConfiguration">
+    <remote-repository>
+      <option name="id" value="tsss" />
+      <option name="name" value="Nexus Maven repo" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tsss-maven-pub" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tssh" />
+      <option name="name" value="Nexus Maven repo" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tssh-maven-pub" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="pfomb-maven" />
+      <option name="name" value="pfomb-maven" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/ian-maven" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="ian-maven" />
+      <option name="name" value="ian-maven" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/ian-maven/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="ccm-maven-pub" />
+      <option name="name" value="ccm-maven-pub" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/ccm-maven-pub" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="plcm" />
+      <option name="name" value="Nexus Maven repo" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/plcm-maven-pub" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tsrm-maven-pub" />
+      <option name="name" value="tsrm-maven-pub" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tsrm-maven-pub/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tssh-maven-pub" />
+      <option name="name" value="tssh-maven-pub" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tssh-maven-pub/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="ccm-maven" />
+      <option name="name" value="ccm-maven" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/ccm-maven" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tsrm" />
+      <option name="name" value="Nexus Maven repo" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tsrm-maven-pub" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="epaa-maven-pub" />
+      <option name="name" value="epaa-maven-pub" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/epaa-maven-pub/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="fics-maven-pub" />
+      <option name="name" value="fics-maven-pub" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/fics-maven-pub" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="jboss.community" />
+      <option name="name" value="JBoss Community repository" />
+      <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tsid-maven-pub" />
+      <option name="name" value="tsid-maven-pub" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tsid-maven-pub/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tsec-maven-pub" />
+      <option name="name" value="tsec-maven-pub" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tsec-maven-pub/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tsss-maven-pub" />
+      <option name="name" value="tsss-maven-pub" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tsss-maven-pub/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tslg" />
+      <option name="name" value="Nexus Maven repo" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tslg-maven-pub" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="central" />
+      <option name="name" value="Central Repository" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/ian-maven-lib" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="central" />
+      <option name="name" value="Maven Central repository" />
+      <option name="url" value="https://repo1.maven.org/maven2" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tsau" />
+      <option name="name" value="Nexus Maven repo" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tsau-maven-pub" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="ian-maven-snapshot" />
+      <option name="name" value="ian-maven-snapshot" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/ian-maven-snapshot" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tsds" />
+      <option name="name" value="Nexus Maven repo" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tsds-maven-pub" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tstr" />
+      <option name="name" value="Nexus Maven repo" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tstr-maven-pub" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tsaj_trtl" />
+      <option name="name" value="Nexus Maven repo" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tsaj_trtl-maven-pub" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="ccm-maven-lib" />
+      <option name="name" value="ccm-maven-lib" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/ccm-maven-lib" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="ian-maven-lib" />
+      <option name="name" value="ian-maven-lib" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/ian-maven-lib" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tsaj" />
+      <option name="name" value="Nexus Maven repo" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tsaj-maven-pub" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tsau-maven-pub" />
+      <option name="name" value="tsau-maven-pub" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tsau-maven-pub/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="frnt-maven-pub" />
+      <option name="name" value="frnt-maven-pub" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/frnt-maven-pub/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="ccm-maven-snapshot" />
+      <option name="name" value="ccm-maven-snapshot" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/ccm-maven-snapshot" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="tsec" />
+      <option name="name" value="Nexus Maven repo" />
+      <option name="url" value="https://maven.repo-ci.sfera.inno.local/repository/tsec-maven-pub" />
+    </remote-repository>
+  </component>
+</project>
