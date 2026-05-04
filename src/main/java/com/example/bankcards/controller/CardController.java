@@ -3,6 +3,7 @@ package com.example.bankcards.controller;
 import com.example.bankcards.dto.CardCreateRequest;
 import com.example.bankcards.dto.CardFilter;
 import com.example.bankcards.dto.CardResponse;
+import com.example.bankcards.dto.CardUpdateRequest;
 import com.example.bankcards.dto.TransferRequest;
 import com.example.bankcards.entity.CardStatus;
 import com.example.bankcards.service.CardService;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.nio.file.AccessDeniedException;
 import java.util.UUID;
 
 @RestController
@@ -56,7 +58,7 @@ public class CardController {
 
     @PutMapping("/{id}")
     public CardResponse update(@PathVariable UUID id,
-                               @Valid @RequestBody CardUpdateRequest request) {
+                               @Valid @RequestBody CardUpdateRequest request) throws AccessDeniedException {
         return cardService.update(id, request);
     }
 
@@ -85,7 +87,7 @@ public class CardController {
     public CardResponse updateStatus(
             @PathVariable UUID id,
             @RequestBody CardStatus status
-    ) {
+    ) throws AccessDeniedException {
         return cardService.updateStatus(id, status);
     }
 }

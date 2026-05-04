@@ -7,10 +7,10 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record TransferRequest(
-        @NotNull(message = "ID карты отправителя обязателен")
+        @NotNull(message = "ID карты отправки обязателен")
         UUID fromCardId,
 
-        @NotNull(message = "ID карты получателя обязателен")
+        @NotNull(message = "ID карты перевода обязателен")
         UUID toCardId,
 
         @NotNull(message = "Сумма обязательна")
