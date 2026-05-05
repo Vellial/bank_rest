@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.management.relation.RoleNotFoundException;
@@ -59,7 +59,7 @@ public class AdminUserController {
     }
 
     @PutMapping("/{id}/role")
-    public ResponseEntity<Void> updateUser(@PathVariable UUID id, UserUpdateRequest request) throws RoleNotFoundException {
+    public ResponseEntity<Void> updateUser(@PathVariable UUID id, @RequestBody UserUpdateRequest request) throws RoleNotFoundException {
         userService.updateUser(id, request);
         return ResponseEntity.ok().build();
     }

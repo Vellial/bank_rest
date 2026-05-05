@@ -65,7 +65,7 @@ public class CardController {
 
     @PutMapping("/{id}")
     public CardResponse update(@PathVariable UUID id,
-                               @Valid @RequestBody CardUpdateRequest request) throws AccessDeniedException {
+                               @Valid @RequestBody CardUpdateRequest request) {
         return cardService.update(id, request);
     }
 
@@ -74,7 +74,7 @@ public class CardController {
             @PathVariable UUID id,
             @RequestBody CardBlockRequestDto requestDto,
             @AuthenticationPrincipal UserDetails userDetails
-    ) throws AccessDeniedException {
+    ) {
         var response = cardService.requestCardBlock(id, userDetails.getUsername(), requestDto.reason());
         return ResponseEntity.ok(response);
     }
