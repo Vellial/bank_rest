@@ -230,7 +230,7 @@ class CardServiceTest {
         when(cardRepository.findByCardNumber(cardNumber)).thenReturn(Optional.of(fromCard));
         when(cardRepository.findByCardNumber("4222222222222222")).thenReturn(Optional.of(toCard));
 
-        TransferRequest request = new TransferRequest(cardNumber, "4222222222222222", BigDecimal.ZERO);
+        TransferRequest request = new TransferRequest(cardNumber, "4222222222222222", new BigDecimal("-100"));
 
         assertThrows(IllegalArgumentException.class, () -> cardService.transfer(request, username));
     }

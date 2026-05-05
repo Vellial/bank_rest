@@ -101,7 +101,7 @@ public class CardService {
 
     @Transactional
     public TransferResponse transfer(TransferRequest request, String username) throws AccessDeniedException {
-        if (request.amount() == null || request.amount().compareTo(BigDecimal.ZERO) <= 0) {
+        if (request.amount() == null || request.amount().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Сумма перевода должна быть положительной");
         }
 

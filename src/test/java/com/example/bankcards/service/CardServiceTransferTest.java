@@ -4,6 +4,7 @@ import com.example.bankcards.dto.transfer.TransferRequest;
 import com.example.bankcards.dto.transfer.TransferResponse;
 import com.example.bankcards.entity.BankUser;
 import com.example.bankcards.entity.Card;
+import com.example.bankcards.entity.CardStatus;
 import com.example.bankcards.exception.CardNotFoundException;
 import com.example.bankcards.exception.InsufficientFundsException;
 import com.example.bankcards.exception.UserNotFoundException;
@@ -19,9 +20,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
-import java.nio.file.AccessDeniedException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -71,13 +72,16 @@ public class CardServiceTransferTest {
         toCard.setUser(new BankUser()); // другой пользователь
         toCard.setBalance(new BigDecimal("500.00"));
 
+        fromCard.setStatus(CardStatus.ACTIVE);
+        toCard.setStatus(CardStatus.ACTIVE);
+
         when(bankUserRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
         when(cardRepository.findByCardNumber("4111111111111111")).thenReturn(Optional.of(fromCard));
         when(cardRepository.findByCardNumber("4222222222222222")).thenReturn(Optional.of(toCard));
     }
 
     @Test
-    public void transfer_Success() throws AccessDeniedException {
+    public void transfer_Success() {
         TransferRequest request = new TransferRequest("4111111111111111", "4222222222222222", new BigDecimal("200.00"));
 
         TransferResponse response = cardService.transfer(request, "testuser");
@@ -140,7 +144,7 @@ public class CardServiceTransferTest {
     }
 
     @Test
-    public void transfer_ZeroAmount() throws AccessDeniedException {
+    public void transfer_ZeroAmount() {
         TransferRequest request = new TransferRequest("4111111111111111", "4222222222222222", BigDecimal.ZERO);
 
         TransferResponse response = cardService.transfer(request, "testuser");

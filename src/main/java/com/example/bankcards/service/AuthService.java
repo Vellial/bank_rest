@@ -11,9 +11,11 @@ import com.example.bankcards.repository.BankUserRepository;
 import com.example.bankcards.repository.UserRoleRepository;
 import com.example.bankcards.security.JWTTokenProvider;
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.proc.BadJOSEException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,7 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.security.auth.login.AccountException;
+import java.text.ParseException;
 
 @Service
 @RequiredArgsConstructor
@@ -32,44 +34,53 @@ public class AuthService {
     private final JWTTokenProvider jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public AuthResponse register(RegisterRequest request) throws AccountException, JOSEException {
-        BankUser user = bankUserRepository.findByUsername(request.username()).orElseThrow(
-                () -> new AccountException("User not found")
-        );
-        userRoleRepository.findByRoleType(RoleType.USER)
-                .ifPresentOrElse(user::setUserRole,
-                        () -> {
-                            UserRole userRole = new UserRole();
-                            userRole.setRoleType(RoleType.USER);
-                            user.setUserRole(userRole);
-                            userRoleRepository.save(userRole);
-                        }
-                );
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return toResponse(bankUserRepository.save(user));
-    }
+    public AuthResponse register(RegisterRequest request) throws JOSEException {
+        if (bankUserRepository.findByUsername(request.username()).isPresent()) {
+            throw new AuthenticationServiceException("User already exists");
+        }
 
-    public AuthResponse login(LoginRequest request) throws AccountException, JOSEException {
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+        UserRole userRole = userRoleRepository.findByRoleType(RoleType.USER)
+                .orElseGet(() -> {
+                    UserRole role = new UserRole();
+                    role.setRoleType(RoleType.USER);
+                    return userRoleRepository.save(role);
+                });
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        BankUser user = bankUserRepository.findByUsername(request.username())
-                .orElseThrow(() -> new AccountException("User not found"));
-
+        BankUser user = new BankUser();
+        user.setUsername(request.username());
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setUserRole(userRole);
+        user = bankUserRepository.save(user);
         return toResponse(user);
     }
 
-    public AuthResponse refresh(@Valid RefreshRequest request) throws AccountException {
+    public AuthResponse login(LoginRequest request) throws JOSEException {
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+        } catch (Exception e) {
+            throw new AuthenticationServiceException("Invalid credentials");
+        }
+
+        BankUser user = bankUserRepository.findByUsername(request.username())
+                .orElseThrow(() -> new AuthenticationServiceException("User not found"));
+
+        return toResponse(user, authentication);
+    }
+
+    public AuthResponse refresh(@Valid RefreshRequest request) throws BadJOSEException {
         try {
             String username = jwtService.getSubject(request.refreshToken());
+            if (username == null) {
+                throw new AuthenticationServiceException("Invalid or expired refresh token");
+            }
+
             BankUser user = bankUserRepository.findByUsername(username)
-                    .orElseThrow(() -> new AccountException("Invalid refresh token"));
+                    .orElseThrow(() -> new AuthenticationServiceException("Invalid refresh token"));
 
             return toResponse(user);
-        } catch (Exception e) {
-            throw new AccountException("Invalid or expired refresh token");
+        } catch (JOSEException | ParseException e) {
+            throw new AuthenticationServiceException("Invalid or expired refresh token");
         }
     }
 
@@ -77,6 +88,14 @@ public class AuthService {
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        String token = jwtService.generateToken((UserDetails) authentication.getPrincipal());
+        String refreshToken = jwtService.generateRefreshToken((UserDetails) authentication.getPrincipal());
+        return new AuthResponse(token, refreshToken, user.getUsername(), user.getUserRole().getRoleType().name());
+    }
+
+    public AuthResponse toResponse(BankUser user, Authentication authentication) throws JOSEException {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String token = jwtService.generateToken((UserDetails) authentication.getPrincipal());

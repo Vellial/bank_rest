@@ -90,7 +90,7 @@ public class UserService implements UserDetailsService {
         bankUserRepository.delete(user);
     }
 
-    private UserResponse toResponse(BankUser user) {
+    public UserResponse toResponse(BankUser user) {
         return new UserResponse(user.getId(), user.getUsername(), user.getName(), user.getEmail());
     }
 }
