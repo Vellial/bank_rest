@@ -1,4 +1,4 @@
-package com.example.bankcards.dto;
+package com.example.bankcards.dto.card;
 
 import com.example.bankcards.entity.BankUser;
 import com.example.bankcards.entity.CardStatus;
@@ -14,6 +14,7 @@ public class CardResponse {
     private UUID id;
     private String maskedNumber;
     private BankUser cardHolder;
+    private String cardHolderName;
     private String expiryDate;
     private CardStatus status;
     private BigDecimal balance;

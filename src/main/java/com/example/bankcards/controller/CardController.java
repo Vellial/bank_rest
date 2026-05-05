@@ -1,11 +1,15 @@
 package com.example.bankcards.controller;
 
-import com.example.bankcards.dto.CardCreateRequest;
-import com.example.bankcards.dto.CardFilter;
-import com.example.bankcards.dto.CardResponse;
-import com.example.bankcards.dto.CardUpdateRequest;
+import com.example.bankcards.dto.card.CardBlockRequestDto;
+import com.example.bankcards.dto.card.CardBlockResponse;
+import com.example.bankcards.dto.card.CardCreateRequest;
+import com.example.bankcards.dto.card.CardFilter;
+import com.example.bankcards.dto.card.CardResponse;
+import com.example.bankcards.dto.card.CardUpdateRequest;
 import com.example.bankcards.dto.TransferRequest;
+import com.example.bankcards.dto.transfer.TransferResponse;
 import com.example.bankcards.entity.CardStatus;
+import com.example.bankcards.service.AdminCardService;
 import com.example.bankcards.service.CardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +40,7 @@ import java.util.UUID;
 public class CardController {
 
     private final CardService cardService;
+    private final AdminCardService adminCardService;
 
     @GetMapping
     public Page<CardResponse> getAll(
@@ -51,6 +56,7 @@ public class CardController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CardResponse> create(@Valid @RequestBody CardCreateRequest request) {
         CardResponse created = cardService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -62,7 +68,18 @@ public class CardController {
         return cardService.update(id, request);
     }
 
+    @PostMapping("/{id}/request-block")
+    public ResponseEntity<CardBlockResponse> requestCardBlock(
+            @PathVariable UUID id,
+            @RequestBody CardBlockRequestDto requestDto,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) throws AccessDeniedException {
+        var response = cardService.requestCardBlock(id, userDetails.getUsername(), requestDto.reason());
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         cardService.delete(id);
         return ResponseEntity.noContent().build();
@@ -72,14 +89,14 @@ public class CardController {
     public ResponseEntity<TransferResponse> transfer(
             @Valid @RequestBody TransferRequest request,
             @AuthenticationPrincipal UserDetails userDetails
-    ) {
+    ) throws AccessDeniedException {
         TransferResponse result = cardService.transfer(request, userDetails.getUsername());
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}/balance")
-    public BigDecimal getBalance(@PathVariable UUID id) {
-        return cardService.getBalance(id);
+    public BigDecimal getBalance(@PathVariable String cardNumber) {
+        return cardService.getBalance(cardNumber);
     }
 
     @PutMapping("/{id}/status")
@@ -89,5 +106,19 @@ public class CardController {
             @RequestBody CardStatus status
     ) throws AccessDeniedException {
         return cardService.updateStatus(id, status);
+    }
+
+    @PutMapping("/admin/block-requests/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> approveBlockRequest(@PathVariable UUID id) {
+        adminCardService.approveBlockRequest(id);
+        return ResponseEntity.ok("Блокировка одобрена, карта заблокирована.");
+    }
+
+    @PutMapping("/admin/block-requests/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> rejectBlockRequest(@PathVariable UUID id, @RequestBody String reason) {
+        adminCardService.rejectBlockRequest(id, reason);
+        return ResponseEntity.ok("Запрос на блокировку отклонён.");
     }
 }

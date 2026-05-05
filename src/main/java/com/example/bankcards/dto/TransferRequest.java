@@ -4,14 +4,13 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 public record TransferRequest(
-        @NotNull(message = "ID карты отправки обязателен")
-        UUID fromCardId,
+        @NotNull(message = "Номер карты отправки обязателен")
+        String fromCardId,
 
-        @NotNull(message = "ID карты перевода обязателен")
-        UUID toCardId,
+        @NotNull(message = "Номер карты перевода обязателен")
+        String toCardId,
 
         @NotNull(message = "Сумма обязательна")
         @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0")

@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.text.ParseException;
 import java.util.Date;
@@ -23,11 +22,15 @@ import java.util.Date;
 @Component
 @RequiredArgsConstructor
 public class JWTTokenProvider {
-// todo дописать бины
-    private final WebApplicationContext webApplicationContext;
+    private final JWEEncrypter jweEncrypter;
+
+    private final ConfigurableJWTProcessor<SimpleSecurityContext> jwtProcessor;
 
     @Value("${security.jwtSecretExpiration}")
     private long jwtSecretExpiration;
+
+    @Value("${security.jwtRefreshExpiration}")
+    private long refreshExpiration;
 
     private Payload getPayload(String subject, String otherInfo) {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
@@ -40,13 +43,24 @@ public class JWTTokenProvider {
         return new Payload(claims.toJSONObject());
     }
 
-    private void encrypt(JWEObject jweObject) throws JOSEException {
-        jweObject.encrypt((JWEEncrypter) webApplicationContext.getBean("JWEEncrypter"));
-    }
-
     private JWEHeader getHeader() {
         return new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A128CBC_HS256);
     }
+
+    public String generateRefreshToken(UserDetails user) throws JOSEException {
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .subject(user.getUsername())
+                .claim("type", "refresh")
+                .issueTime(new Date())
+                .expirationTime(new Date(System.currentTimeMillis() + refreshExpiration))
+                .build();
+
+        Payload payload = new Payload(claims.toJSONObject());
+        JWEObject jweObject = new JWEObject(getHeader(), payload);
+        jweObject.encrypt(jweEncrypter);
+        return jweObject.serialize();
+    }
+
 
     public String generateToken(UserDetails user) throws JOSEException {
         JWEObject jweObject = new JWEObject(
@@ -56,7 +70,7 @@ public class JWTTokenProvider {
                         "additional user info"
                 ));
 
-        encrypt(jweObject);
+        jweObject.encrypt(jweEncrypter);
         return jweObject.serialize();
     }
 
@@ -72,8 +86,6 @@ public class JWTTokenProvider {
     }
 
     private JWTClaimsSet extractClaims(String token) throws BadJOSEException, ParseException, JOSEException {
-        ConfigurableJWTProcessor<SimpleSecurityContext> jwtProcessor =
-                (ConfigurableJWTProcessor<SimpleSecurityContext>) webApplicationContext.getBean("JWTProcessor");
         return jwtProcessor.process(token, null);
     }
 }

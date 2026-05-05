@@ -1,16 +1,26 @@
 package com.example.bankcards.service;
 
-import com.example.bankcards.dto.CardCreateRequest;
-import com.example.bankcards.dto.CardFilter;
-import com.example.bankcards.dto.CardResponse;
-import com.example.bankcards.dto.CardUpdateRequest;
+import com.example.bankcards.dto.card.CardBlockResponse;
+import com.example.bankcards.dto.card.CardCreateRequest;
+import com.example.bankcards.dto.card.CardFilter;
+import com.example.bankcards.dto.card.CardResponse;
+import com.example.bankcards.dto.card.CardUpdateRequest;
 import com.example.bankcards.dto.TransferRequest;
+import com.example.bankcards.dto.transfer.TransferResponse;
 import com.example.bankcards.entity.BankUser;
 import com.example.bankcards.entity.Card;
+import com.example.bankcards.entity.CardBlockRequest;
 import com.example.bankcards.entity.CardStatus;
+import com.example.bankcards.entity.RequestStatus;
 import com.example.bankcards.entity.RoleType;
+import com.example.bankcards.exception.CardByIdNotFoundException;
 import com.example.bankcards.exception.CardNotFoundException;
+import com.example.bankcards.exception.InsufficientFundsException;
+import com.example.bankcards.exception.UserNotFoundException;
+import com.example.bankcards.repository.BankUserRepository;
+import com.example.bankcards.repository.CardBlockRequestRepository;
 import com.example.bankcards.repository.CardRepository;
+import com.example.bankcards.util.CardMaskingUtils;
 import com.example.bankcards.util.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +39,8 @@ import java.util.UUID;
 public class CardService {
 
     private final CardRepository cardRepository;
+    private final CardBlockRequestRepository cardBlockRequestRepository;
+    private final BankUserRepository bankUserRepository;
     private final SecurityUtils securityUtils;
 
     public Page<CardResponse> getAll(CardFilter filter, Pageable pageable) {
@@ -38,7 +50,7 @@ public class CardService {
     }
 
     public CardResponse getById(UUID id) {
-        Card card = cardRepository.findById(id).orElseThrow(() -> new CardNotFoundException(id));
+        Card card = cardRepository.findById(id).orElseThrow(() -> new CardByIdNotFoundException(id));
         return toDto(card);
     }
 
@@ -58,7 +70,7 @@ public class CardService {
     @Transactional
     public CardResponse update(UUID id, CardUpdateRequest request) throws AccessDeniedException {
         BankUser user = securityUtils.getCurrentUser();
-        Card card = cardRepository.findById(id).orElseThrow(() -> new CardNotFoundException(id));
+        Card card = cardRepository.findById(id).orElseThrow(() -> new CardByIdNotFoundException(id));
 
         if (!card.getUser().getId().equals(user.getId())) {
             throw new AccessDeniedException("Карта не принадлежит пользователю");
@@ -82,17 +94,39 @@ public class CardService {
     }
 
     public void delete(UUID id) {
-        Card card = cardRepository.findById(id).orElseThrow(() -> new CardNotFoundException(id));
+        Card card = cardRepository.findById(id).orElseThrow(() -> new CardByIdNotFoundException(id));
         cardRepository.delete(card);
     }
 
-    public TransferResponse transfer(TransferRequest request, String username) {
-        return null;
+    public TransferResponse transfer(TransferRequest request, String username) throws AccessDeniedException {
+        BankUser user = bankUserRepository.findByUsername(username).orElseThrow(
+                () -> new UserNotFoundException(username)
+        );
+        Card fromCard = cardRepository.findByCardNumber(request.fromCardId())
+                .orElseThrow(() -> new CardNotFoundException(request.fromCardId()));
+
+        if (!fromCard.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Карта не принадлежит пользователю");
+        }
+        if (fromCard.getBalance().compareTo(request.amount()) < 0) {
+            throw new InsufficientFundsException(request.amount(), fromCard.getBalance());
+        }
+        Card toCard = cardRepository.findByCardNumber(request.toCardId())
+                .orElseThrow(() -> new CardNotFoundException(request.toCardId()));
+
+        fromCard.setBalance(fromCard.getBalance().subtract(request.amount()));
+
+        toCard.setBalance(toCard.getBalance().add(request.amount()));
+        cardRepository.save(fromCard);
+        cardRepository.save(toCard);
+        return new TransferResponse(true,
+                "Перевод успешно выполнен",
+                CardMaskingUtils.maskCardNumber(fromCard.getCardNumber()),
+                CardMaskingUtils.maskCardNumber(toCard.getCardNumber()));
     }
 
-
-    public BigDecimal getBalance(UUID id) {
-        Card card = cardRepository.findById(id).orElseThrow(() -> new CardNotFoundException(id));
+    public BigDecimal getBalance(String number) {
+        Card card = cardRepository.findByCardNumber(number).orElseThrow(() -> new CardNotFoundException(number));
         return card.getBalance();
     }
 
@@ -102,15 +136,43 @@ public class CardService {
         if (currentUser.getUserRole().getRoleType() != RoleType.ADMIN) {
             throw new AccessDeniedException("Только админ может менять статус карты");
         }
-        Card card = cardRepository.findById(id).orElseThrow(() -> new CardNotFoundException(id));
+        Card card = cardRepository.findById(id).orElseThrow(() -> new CardByIdNotFoundException(id));
         card.setStatus(status);
+        return toDto(card);
+    }
+
+    public CardBlockResponse requestCardBlock(UUID cardId, String username, String reason) throws AccessDeniedException {
+        Card card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new CardByIdNotFoundException(cardId));
+
+        if (!card.getUser().getUsername().equals(username)) {
+            throw new AccessDeniedException("Карта не принадлежит пользователю");
+        }
+
+        if (cardBlockRequestRepository.findByCardIdAndStatus(cardId, RequestStatus.PENDING)
+                .stream().anyMatch(req -> req.getStatus() == RequestStatus.PENDING)) {
+            throw new IllegalStateException("Запрос на блокировку уже отправлен и ожидает обработки");
+        }
+
+        CardBlockRequest request = new CardBlockRequest();
+        request.setCard(card);
+        request.setUser(card.getUser());
+        request.setReason(reason);
+
+        cardBlockRequestRepository.save(request);
+
+        return new CardBlockResponse(
+                request.getId(),
+                "Запрос на блокировку карты отправлен. Ожидайте подтверждения от администратора."
+        );
     }
 
     public CardResponse toDto(Card card) {
         return new CardResponse(
                 card.getId(),
-                card.getMaskedNumber(),
+                CardMaskingUtils.maskCardNumber(card.getCardNumber()),
                 card.getUser(),
+                card.getCardHolderName(),
                 card.getExpiryDate().format(DateTimeFormatter.ofPattern("MM/yyyy")),
                 card.getStatus(),
                 card.getBalance()

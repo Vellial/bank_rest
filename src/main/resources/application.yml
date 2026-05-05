@@ -1,8 +1,31 @@
-#
-# application.yml — главный конфигурационный файл Spring Boot.
+server:
+  port: 8080
 
-Что нужно сделать:
-  - Указать настройки подключения к базе данных.
-  - Указать порт приложения.
-  - Настроить параметры безопасности и JWT.
-  - Включить Swagger UI.
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    h2:
+      console:
+        enabled: true
+        path: /h2-console
+
+security:
+  jwtSecret: your-64-byte-secret-key-for-hmac-sha256-please-use-random-and-long!
+  jwtSecretExpiration: 3600000 # 1 час в миллисекундах
+  jwtRefreshExpiration: 604800000 # 7 дней
+
+swagger:
+  enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    display-operation-id: true
+    tags-sorter: alpha
+    operations-sorter: alpha

@@ -41,6 +41,8 @@ public class Card {
     @JoinColumn(name = "user_id", nullable = false)
     private BankUser user;
 
+    private String cardHolderName;
+
     @Column(name = "expiry_date", nullable = false)
     private LocalDate expiryDate;
 
@@ -51,11 +53,4 @@ public class Card {
     @Column(nullable = false)
     private BigDecimal balance;
 
-    public String getMaskedNumber() {
-        if (cardNumber == null || cardNumber.length() < 4) {
-            return "****";
-        }
-        String last4 = cardNumber.substring(cardNumber.length() - 4);
-        return "**** **** **** " + last4;
-    }
 }
