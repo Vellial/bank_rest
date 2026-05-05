@@ -3,6 +3,7 @@ package com.example.bankcards.service;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.CardBlockRequest;
 import com.example.bankcards.entity.CardStatus;
+import com.example.bankcards.entity.RequestStatus;
 import com.example.bankcards.repository.CardBlockRequestRepository;
 import com.example.bankcards.repository.CardRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,14 +24,13 @@ public class AdminCardService {
         CardBlockRequest request = cardBlockRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Запрос не найден"));
 
-        if (request.getStatus() != CardBlockRequest.RequestStatus.PENDING) {
+        if (request.getStatus() != RequestStatus.PENDING) {
             throw new IllegalStateException("Запрос уже обработан");
         }
 
-        request.setStatus(CardBlockRequest.RequestStatus.APPROVED);
+        request.setStatus(RequestStatus.APPROVED);
         cardBlockRequestRepository.save(request);
 
-        // Блокируем карту
         Card card = request.getCard();
         card.setStatus(CardStatus.BLOCKED);
         cardRepository.save(card);
@@ -40,11 +40,11 @@ public class AdminCardService {
         CardBlockRequest request = cardBlockRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Запрос не найден"));
 
-        if (request.getStatus() != CardBlockRequest.RequestStatus.PENDING) {
+        if (request.getStatus() != RequestStatus.PENDING) {
             throw new IllegalStateException("Запрос уже обработан");
         }
 
-        request.setStatus(CardBlockRequest.RequestStatus.REJECTED);
+        request.setStatus(RequestStatus.REJECTED);
         request.setReason(request.getReason() + " | Отклонено: " + rejectionReason);
         cardBlockRequestRepository.save(request);
     }

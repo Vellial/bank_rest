@@ -167,6 +167,12 @@ public class CardService {
         );
     }
 
+    public Page<CardResponse> getAllCards(Pageable pageable) {
+        Page<Card> cards = cardRepository.getAllCards(pageable);
+
+        return cards.map(this::toDto);
+    }
+
     public CardResponse toDto(Card card) {
         return new CardResponse(
                 card.getId(),
@@ -178,5 +184,4 @@ public class CardService {
                 card.getBalance()
         );
     }
-
 }

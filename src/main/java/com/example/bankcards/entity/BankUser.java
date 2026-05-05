@@ -34,6 +34,8 @@ public class BankUser {
     private String email;
     private String name;
 
+    private Boolean blocked = false;
+
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Card> cards;
 
