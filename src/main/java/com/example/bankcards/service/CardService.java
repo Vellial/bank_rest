@@ -5,7 +5,8 @@ import com.example.bankcards.dto.card.CardCreateRequest;
 import com.example.bankcards.dto.card.CardFilter;
 import com.example.bankcards.dto.card.CardResponse;
 import com.example.bankcards.dto.card.CardUpdateRequest;
-import com.example.bankcards.dto.TransferRequest;
+
+import com.example.bankcards.dto.transfer.TransferRequest;
 import com.example.bankcards.dto.transfer.TransferResponse;
 import com.example.bankcards.entity.BankUser;
 import com.example.bankcards.entity.Card;
@@ -30,7 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.nio.file.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
@@ -98,7 +99,12 @@ public class CardService {
         cardRepository.delete(card);
     }
 
+    @Transactional
     public TransferResponse transfer(TransferRequest request, String username) throws AccessDeniedException {
+        if (request.amount() == null || request.amount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Сумма перевода должна быть положительной");
+        }
+
         BankUser user = bankUserRepository.findByUsername(username).orElseThrow(
                 () -> new UserNotFoundException(username)
         );
@@ -108,11 +114,17 @@ public class CardService {
         if (!fromCard.getUser().getId().equals(user.getId())) {
             throw new AccessDeniedException("Карта не принадлежит пользователю");
         }
+        if (fromCard.getStatus() != CardStatus.ACTIVE) {
+            throw new IllegalArgumentException("Карта отправителя заблокирована");
+        }
         if (fromCard.getBalance().compareTo(request.amount()) < 0) {
             throw new InsufficientFundsException(request.amount(), fromCard.getBalance());
         }
         Card toCard = cardRepository.findByCardNumber(request.toCardId())
                 .orElseThrow(() -> new CardNotFoundException(request.toCardId()));
+        if (toCard.getStatus() != CardStatus.ACTIVE) {
+            throw new IllegalArgumentException("Карта отправителя заблокирована");
+        }
 
         fromCard.setBalance(fromCard.getBalance().subtract(request.amount()));
 
@@ -138,7 +150,8 @@ public class CardService {
         }
         Card card = cardRepository.findById(id).orElseThrow(() -> new CardByIdNotFoundException(id));
         card.setStatus(status);
-        return toDto(card);
+        Card saved = cardRepository.save(card);
+        return toDto(saved);
     }
 
     public CardBlockResponse requestCardBlock(UUID cardId, String username, String reason) throws AccessDeniedException {
@@ -149,8 +162,7 @@ public class CardService {
             throw new AccessDeniedException("Карта не принадлежит пользователю");
         }
 
-        if (cardBlockRequestRepository.findByCardIdAndStatus(cardId, RequestStatus.PENDING)
-                .stream().anyMatch(req -> req.getStatus() == RequestStatus.PENDING)) {
+        if (!cardBlockRequestRepository.findByCardIdAndStatus(cardId, RequestStatus.PENDING).isEmpty()) {
             throw new IllegalStateException("Запрос на блокировку уже отправлен и ожидает обработки");
         }
 

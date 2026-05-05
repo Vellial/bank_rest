@@ -36,6 +36,7 @@ public class AdminCardService {
         cardRepository.save(card);
     }
 
+    @Transactional
     public void rejectBlockRequest(UUID requestId, String rejectionReason) {
         CardBlockRequest request = cardBlockRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Запрос не найден"));

@@ -1,18 +1,19 @@
 package com.example.bankcards.dto.transfer;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
 public record TransferRequest(
-        @NotNull
+        @NotNull(message = "Номер карты отправки обязателен")
         String fromCardId,
 
-        @NotNull
+        @NotNull(message = "Номер карты перевода обязателен")
         String toCardId,
 
-        @Positive(message = "Amount must be greater than zero")
+        @NotNull(message = "Сумма обязательна")
+        @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0")
         BigDecimal amount
 ) {
 }

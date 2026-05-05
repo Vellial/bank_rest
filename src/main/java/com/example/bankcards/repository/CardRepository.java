@@ -1,7 +1,6 @@
 package com.example.bankcards.repository;
 
 import com.example.bankcards.entity.Card;
-import com.example.bankcards.entity.CardStatus;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

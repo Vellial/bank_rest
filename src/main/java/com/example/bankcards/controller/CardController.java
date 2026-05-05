@@ -6,7 +6,8 @@ import com.example.bankcards.dto.card.CardCreateRequest;
 import com.example.bankcards.dto.card.CardFilter;
 import com.example.bankcards.dto.card.CardResponse;
 import com.example.bankcards.dto.card.CardUpdateRequest;
-import com.example.bankcards.dto.TransferRequest;
+
+import com.example.bankcards.dto.transfer.TransferRequest;
 import com.example.bankcards.dto.transfer.TransferResponse;
 import com.example.bankcards.entity.CardStatus;
 import com.example.bankcards.service.AdminCardService;
@@ -89,7 +90,7 @@ public class CardController {
     public ResponseEntity<TransferResponse> transfer(
             @Valid @RequestBody TransferRequest request,
             @AuthenticationPrincipal UserDetails userDetails
-    ) throws AccessDeniedException {
+    ) {
         TransferResponse result = cardService.transfer(request, userDetails.getUsername());
         return ResponseEntity.ok(result);
     }
