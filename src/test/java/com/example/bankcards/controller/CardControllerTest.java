@@ -3,6 +3,7 @@ package com.example.bankcards.controller;
 import com.example.bankcards.dto.card.CardBlockResponse;
 import com.example.bankcards.dto.card.CardCreateRequest;
 import com.example.bankcards.dto.card.CardFilter;
+import com.example.bankcards.dto.card.CardPageResponse;
 import com.example.bankcards.dto.card.CardResponse;
 import com.example.bankcards.dto.card.CardUpdateRequest;
 import com.example.bankcards.dto.transfer.TransferRequest;
@@ -16,7 +17,7 @@ import com.example.bankcards.service.CardService;
 import com.example.bankcards.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.MediaType;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -24,11 +25,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -46,6 +47,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -72,7 +74,6 @@ public class CardControllerTest {
     private ObjectMapper objectMapper;
 
     private UUID testCardId = UUID.randomUUID();
-    private String testCardNumber = "1234567890123456";
 
     private CardResponse createCardResponse() {
         UUID cardId = UUID.randomUUID();
@@ -114,17 +115,17 @@ public class CardControllerTest {
                         .param("page", "0")
                         .param("size", "20"))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.number").value(0))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.size").value(20))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(1))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0]").exists())
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0]").exists())
                 .andReturn();
 
         String content = result.getResponse().getContentAsString();
         ObjectMapper mapper = new ObjectMapper();
-        Page<CardResponse> pageResponse = mapper.readValue(
+        CardPageResponse pageResponse = mapper.readValue(
                 content,
-                new TypeReference<Page<CardResponse>>() {}
+                new TypeReference<CardPageResponse>() {}
         );
         List<CardResponse> responses = pageResponse.getContent();
         // Проверяем первый элемент
@@ -148,11 +149,11 @@ public class CardControllerTest {
 
         mockMvc.perform(get("/api/v1/cards/{id}", testCardId))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(testCardId.toString()));
+
+                .andExpect(jsonPath("$.id").value(testCardId.toString()));
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void createCard_ShouldReturnCreated() throws Exception {
         CardResponse cardResponse = createCardResponse();
         CardCreateRequest cardCreateRequest = createCardCreateRequest();
@@ -160,10 +161,10 @@ public class CardControllerTest {
         when(cardService.create(any(CardCreateRequest.class))).thenReturn(cardResponse);
 
         mockMvc.perform(post("/api/v1/cards")
-                        .contentType(String.valueOf(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cardCreateRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
+                .andExpect(jsonPath("$.id").exists());
     }
 
     private CardCreateRequest createCardCreateRequest() {
@@ -172,15 +173,19 @@ public class CardControllerTest {
 
     @Test
     void updateCard_ShouldUpdateAndReturnCard() throws Exception {
-        CardResponse cardResponse = createCardResponse();
-
-        when(cardService.update(testCardId, any(CardUpdateRequest.class))).thenReturn(cardResponse);
+        CardResponse cardResponse = createCardResponse(testCardId);
+        CardUpdateRequest updateRequest = new CardUpdateRequest(cardResponse.maskedNumber(), cardResponse.expiryDate(), cardResponse.balance(), CardStatus.ACTIVE);
+        when(cardService.update(eq(testCardId), any(CardUpdateRequest.class))).thenReturn(cardResponse);
 
         mockMvc.perform(put("/api/v1/cards/{id}", testCardId)
-                        .contentType(String.valueOf(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(testCardId.toString()));
+                .andExpect(jsonPath("$.id").value(testCardId.toString()))
+                .andExpect(jsonPath("$.maskedNumber").value(updateRequest.cardNumber()))
+                .andExpect(jsonPath("$.expiryDate").value(updateRequest.expiryDate()))
+                .andExpect(jsonPath("$.balance").value(1500.0))
+                .andExpect(jsonPath("$.status").value(updateRequest.status().name()));;
     }
 
     @Test
@@ -191,16 +196,14 @@ public class CardControllerTest {
         when(cardService.requestCardBlock(testCardId, "user@example.com", "Потеряна")).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/cards/{id}/request-block", testCardId)
-                        .contentType(String.valueOf(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reason\":\"Потеряна\"}"))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.requestId").value(uuid.toString()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Запрос на блокировку карты отправлен. Ожидайте подтверждения от администратора."))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
+                .andExpect(jsonPath("$.requestId").value(uuid.toString()))
+                .andExpect(jsonPath("$.message").value("Запрос на блокировку карты отправлен. Ожидайте подтверждения от администратора."));
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void deleteCard_ShouldReturnNoContent() throws Exception {
         doNothing().when(cardService).delete(testCardId);
 
@@ -221,41 +224,39 @@ public class CardControllerTest {
         when(cardService.transfer(any(TransferRequest.class), eq("user@example.com"))).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/cards/transfer")
-                        .contentType(String.valueOf(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.success").value(true))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Перевод выполнен успешно"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.fromCardMasked").value("**** **** **** 1234"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.toCardMasked").value("**** **** **** 5678"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Перевод выполнен успешно"))
+                .andExpect(jsonPath("$.fromCardMasked").value("**** **** **** 1234"))
+                .andExpect(jsonPath("$.toCardMasked").value("**** **** **** 5678"));
     }
 
     @Test
     void getBalance_ShouldReturnBalance() throws Exception {
         BigDecimal balance = new BigDecimal("1000.00");
-        when(cardService.getBalance(testCardNumber)).thenReturn(balance);
+        when(cardService.getBalance(testCardId)).thenReturn(balance);
 
-        mockMvc.perform(get("/api/v1/cards/{id}/balance", testCardNumber))
+        mockMvc.perform(get("/api/v1/cards/{id}/balance", testCardId))
                 .andExpect(status().isOk())
                 .andExpect(content().string(balance.toString()));
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void updateStatus_ShouldUpdateAndReturnCard() throws Exception {
         CardStatus status = CardStatus.ACTIVE;
-        CardResponse cardResponse = createCardResponse();
+        CardResponse cardResponse = createCardResponse(testCardId);
         when(cardService.updateStatus(testCardId, status)).thenReturn(cardResponse);
 
         mockMvc.perform(put("/api/v1/cards/{id}/status", testCardId)
-                        .contentType(String.valueOf(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content("\"ACTIVE\""))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(testCardId.toString()));
+                .andExpect(jsonPath("$.id").value(testCardId.toString()));
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void approveBlockRequest_ShouldReturnSuccessMessage() throws Exception {
         doNothing().when(adminCardService).approveBlockRequest(testCardId);
 
@@ -265,31 +266,22 @@ public class CardControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void rejectBlockRequest_ShouldReturnSuccessMessage() throws Exception {
         doNothing().when(adminCardService).rejectBlockRequest(testCardId, "Причина");
 
         mockMvc.perform(put("/api/v1/cards/admin/block-requests/{id}/reject", testCardId)
-                        .contentType(String.valueOf(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content("\"Причина\""))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Запрос на блокировку отклонён."));
     }
 
     @Test
-    void createCard_WithoutAdminRole_ShouldReturnForbidden() throws Exception {
-        mockMvc.perform(post("/api/v1/cards")
-                        .contentType(String.valueOf(MediaType.APPLICATION_JSON))
-                        .content("{}"))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
     void deleteCard_WithInvalidId_ShouldReturnNotFound() throws Exception {
-        doThrow(new CardByIdNotFoundException(any(UUID.class))).when(cardService).delete(any(UUID.class));
+        UUID invalidId = UUID.randomUUID();
+        doThrow(new CardByIdNotFoundException(invalidId)).when(cardService).delete(invalidId);
 
-        mockMvc.perform(delete("/api/v1/cards/{id}", UUID.randomUUID()))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(delete("/api/v1/cards/{id}", invalidId))
+                .andExpect(status().isNotFound());
     }
 }

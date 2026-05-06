@@ -32,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import org.springframework.security.access.AccessDeniedException;
+
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
@@ -78,7 +80,9 @@ public class CardService {
         }
 
         if (request.expiryDate() != null) {
-            card.setExpiryDate(request.expiryDate());
+            YearMonth expiry = YearMonth.parse(request.expiryDate(),
+                    DateTimeFormatter.ofPattern("MM/yy"));
+            card.setExpiryDate(expiry.atDay(1));
         }
         if (request.status() != null) {
             card.setStatus(request.status());
@@ -137,8 +141,8 @@ public class CardService {
                 CardMaskingUtils.maskCardNumber(toCard.getCardNumber()));
     }
 
-    public BigDecimal getBalance(String number) {
-        Card card = cardRepository.findByCardNumber(number).orElseThrow(() -> new CardNotFoundException(number));
+    public BigDecimal getBalance(UUID id) {
+        Card card = cardRepository.findById(id).orElseThrow(() -> new CardByIdNotFoundException(id));
         return card.getBalance();
     }
 

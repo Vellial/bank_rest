@@ -238,9 +238,9 @@ class CardServiceTest {
     @Test
     void getBalance_ValidCard_ReturnsBalance() {
         Card card = createCard();
-        when(cardRepository.findByCardNumber(cardNumber)).thenReturn(Optional.of(card));
+        when(cardRepository.findById(cardId)).thenReturn(Optional.of(card));
 
-        BigDecimal result = cardService.getBalance(cardNumber);
+        BigDecimal result = cardService.getBalance(cardId);
 
         assertThat(result).isEqualTo(balance);
     }
@@ -249,7 +249,7 @@ class CardServiceTest {
     void getBalance_InvalidCard_ThrowsException() {
         when(cardRepository.findByCardNumber(cardNumber)).thenReturn(Optional.empty());
 
-        assertThrows(CardNotFoundException.class, () -> cardService.getBalance(cardNumber));
+        assertThrows(CardByIdNotFoundException.class, () -> cardService.getBalance(cardId));
     }
 
     @Test

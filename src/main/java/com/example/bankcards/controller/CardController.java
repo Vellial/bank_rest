@@ -64,6 +64,7 @@ public class CardController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public CardResponse update(@PathVariable UUID id,
                                @Valid @RequestBody CardUpdateRequest request) {
         return cardService.update(id, request);
@@ -96,8 +97,9 @@ public class CardController {
     }
 
     @GetMapping("/{id}/balance")
-    public BigDecimal getBalance(@PathVariable String cardNumber) {
-        return cardService.getBalance(cardNumber);
+    public ResponseEntity<BigDecimal> getBalance(@PathVariable UUID id) {
+        var balance = cardService.getBalance(id);
+        return ResponseEntity.ok(balance);
     }
 
     @PutMapping("/{id}/status")
@@ -105,7 +107,7 @@ public class CardController {
     public CardResponse updateStatus(
             @PathVariable UUID id,
             @RequestBody CardStatus status
-    ) throws AccessDeniedException {
+    ) {
         return cardService.updateStatus(id, status);
     }
 

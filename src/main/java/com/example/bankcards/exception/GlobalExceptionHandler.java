@@ -35,15 +35,25 @@ public class GlobalExceptionHandler {
     // Карта не найдена
     @ExceptionHandler(CardNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCardNotFound(CardNotFoundException ex) {
+        Map<String, String> errors = Map.of("cardNumber", ex.getNumber());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse(ex.getMessage(), null));
+                .body(new ErrorResponse(ex.getMessage(), errors));
+    }
+    @ExceptionHandler(CardByIdNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCardNotFound(CardByIdNotFoundException ex) {
+        Map<String, String> errors = Map.of("cardId", ex.getId().toString());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ex.getMessage(), errors));
     }
 
     // Недостаточно средств
     @ExceptionHandler(InsufficientFundsException.class)
     public ResponseEntity<ErrorResponse> handleInsufficientFunds(InsufficientFundsException ex) {
+        Map<String, String> errors = Map.of("balance", "Недостаточно средств на карте",
+                        "requestedAmount", String.valueOf(ex.getRequested()),
+                        "Available", String.valueOf(ex.getAvailable()));
         return ResponseEntity.badRequest()
-                .body(new ErrorResponse(ex.getMessage(), null));
+                .body(new ErrorResponse(ex.getMessage(), errors));
     }
 
     // Доступ запрещён
