@@ -1,0 +1,255 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1778051840990-1
+      author: SKuzina
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createSequence:
+            incrementBy: 50
+            sequenceName: user_role_seq
+            startValue: 1
+
+  - changeSet:
+      id: 1778051840990-5
+      author: SKuzina
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            tableName: user_role
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_user_role
+                  name: id
+                  type: INT
+              - column:
+                  name: role_type
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 1778051840990-2
+      author: SKuzina
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            tableName: bank_user
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_bank_user
+                  name: id
+                  type: UUID
+              - column:
+                  name: username
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: blocked
+                  type: BOOLEAN
+              - column:
+                  name: role_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_bank_user_role
+                    references: user_role(id)
+        - createIndex:
+            tableName: bank_user
+            indexName: idx_bank_user_username
+            columns:
+              - column:
+                  name: username
+        - createIndex:
+            tableName: bank_user
+            indexName: idx_bank_user_email
+            columns:
+              - column:
+                  name: email
+        - createIndex:
+            tableName: bank_user
+            indexName: idx_bank_user_role_id
+            columns:
+              - column:
+                  name: role_id
+
+  - changeSet:
+      id: 1778051840990-3
+      author: SKuzina
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            tableName: card
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_card
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: card_number
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: user_id
+                  type: UUID
+              - column:
+                  name: card_holder_name
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: expiry_date
+                  type: DATE
+              - column:
+                  constraints:
+                    nullable: false
+                  name: status
+                  type: VARCHAR(20)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: balance
+                  type: DECIMAL(19,2)
+        - createIndex:
+            tableName: card
+            indexName: idx_card_user_id
+            columns:
+              - column:
+                  name: user_id
+        - createIndex:
+            tableName: card
+            indexName: idx_card_card_number
+            columns:
+              - column:
+                  name: card_number
+
+  - changeSet:
+      id: 1778051840990-4
+      author: SKuzina
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            tableName: card_block_requests
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_card_block_requests
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: card_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: user_id
+                  type: UUID
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reason
+                  type: VARCHAR(255)
+              - column:
+                  name: requested_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: card_block_requests
+            indexName: idx_request_card_id
+            columns:
+              - column:
+                  name: card_id
+        - createIndex:
+            tableName: card_block_requests
+            indexName: idx_request_user_id
+            columns:
+              - column:
+                  name: user_id
+        - createIndex:
+            tableName: card_block_requests
+            indexName: idx_request_requested_at
+            columns:
+              - column:
+                  name: requested_at
+
+
+  - changeSet:
+      id: 1778051840990-6
+      author: SKuzina
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: role_id
+            baseTableName: bank_user
+            constraintName: FK_BANK_USER_ON_ROLE
+            referencedColumnNames: id
+            referencedTableName: user_role
+  - changeSet:
+      id: 1778051840990-7
+      author: SKuzina
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: card_id
+            baseTableName: card_block_requests
+            constraintName: FK_CARD_BLOCK_REQUESTS_ON_CARD
+            referencedColumnNames: id
+            referencedTableName: card
+  - changeSet:
+      id: 1778051840990-8
+      author: SKuzina
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: card_block_requests
+            constraintName: FK_CARD_BLOCK_REQUESTS_ON_USER
+            referencedColumnNames: id
+            referencedTableName: bank_user
+  - changeSet:
+      id: 1778051840990-9
+      author: SKuzina
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: card
+            constraintName: FK_CARD_ON_USER
+            referencedColumnNames: id
+            referencedTableName: bank_user
+

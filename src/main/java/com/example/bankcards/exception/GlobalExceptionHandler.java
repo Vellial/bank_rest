@@ -1,16 +1,16 @@
 package com.example.bankcards.exception;
 
+import com.example.bankcards.dto.ValidationError;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.nio.file.AccessDeniedException;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.List;
+
 import com.example.bankcards.dto.ErrorResponse;
 
 @RestControllerAdvice
@@ -20,13 +20,12 @@ public class GlobalExceptionHandler {
     // Валидация @Valid
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = ex.getBindingResult()
+        List<ValidationError> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .collect(Collectors.toMap(
-                        FieldError::getField,
-                        e -> e.getDefaultMessage() != null ? e.getDefaultMessage() : "Ошибка валидации"
-                ));
+                .map(e -> new ValidationError(e.getField(),
+                        e.getDefaultMessage() != null ? e.getDefaultMessage() : "Ошибка валидации"))
+                .toList();
 
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse("Ошибка валидации", errors));
@@ -35,13 +34,13 @@ public class GlobalExceptionHandler {
     // Карта не найдена
     @ExceptionHandler(CardNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCardNotFound(CardNotFoundException ex) {
-        Map<String, String> errors = Map.of("cardNumber", ex.getNumber());
+        List<ValidationError> errors = List.of(new ValidationError("cardNumber", ex.getNumber()));
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(ex.getMessage(), errors));
     }
     @ExceptionHandler(CardByIdNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCardNotFound(CardByIdNotFoundException ex) {
-        Map<String, String> errors = Map.of("cardId", ex.getId().toString());
+        List<ValidationError> errors = List.of(new ValidationError("cardId", ex.getId().toString()));
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(ex.getMessage(), errors));
     }
@@ -49,9 +48,9 @@ public class GlobalExceptionHandler {
     // Недостаточно средств
     @ExceptionHandler(InsufficientFundsException.class)
     public ResponseEntity<ErrorResponse> handleInsufficientFunds(InsufficientFundsException ex) {
-        Map<String, String> errors = Map.of("balance", "Недостаточно средств на карте",
-                        "requestedAmount", String.valueOf(ex.getRequested()),
-                        "Available", String.valueOf(ex.getAvailable()));
+        List<ValidationError> errors = List.of(new ValidationError("balance", "Недостаточно средств на карте"),
+                new ValidationError("requestedAmount", String.valueOf(ex.getRequested())),
+                new ValidationError("Available", String.valueOf(ex.getAvailable())));
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse(ex.getMessage(), errors));
     }

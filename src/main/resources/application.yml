@@ -1,31 +1,38 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-    h2:
-      console:
-        enabled: true
-        path: /h2-console
+    url: jdbc:postgresql://localhost:5433/bankrest?createDatabaseIfNotExist=true
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+
+  liquibase:
+    change-log: classpath:db/migration/db.changelog-master.yaml
+
+logging:
+  level:
+    org.springdoc: DEBUG
+    io.swagger.v3: DEBUG
 
 security:
-  jwtSecret: your-64-byte-secret-key-for-hmac-sha256-please-use-random-and-long!
+  jwtSecret: NKussWDkmYVP9fEA4y9qLawSR3tPSrtO43uVve2ybnw=
   jwtSecretExpiration: 3600000 # 1 час в миллисекундах
   jwtRefreshExpiration: 604800000 # 7 дней
 
-swagger:
-  enabled: true
+service:
+  security:
+    unprotected: /favicon.ico,/actuator/**,/clearCache,/error,/swagger-ui.html,/swagger-ui/**,/v3/api-docs/**,/webjars/**
 
 springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
+  webmvc:
     enabled: true
-    display-operation-id: true
-    tags-sorter: alpha
-    operations-sorter: alpha
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true

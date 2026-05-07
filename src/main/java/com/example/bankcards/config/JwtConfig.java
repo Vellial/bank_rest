@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Base64;
 
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 
@@ -33,7 +34,7 @@ public class JwtConfig {
 
     @Bean
     public JWEEncrypter jweEncrypter() throws JOSEException {
-        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes = Base64.getDecoder().decode(jwtSecret);
         return new DirectEncrypter(keyBytes);
     }
 
