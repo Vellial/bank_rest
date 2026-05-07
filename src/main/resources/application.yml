@@ -36,3 +36,9 @@ springdoc:
     enabled: true
   api-docs:
     enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

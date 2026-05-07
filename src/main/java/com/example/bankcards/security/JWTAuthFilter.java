@@ -57,7 +57,7 @@ public class JWTAuthFilter extends OncePerRequestFilter {
                     throw new IOException(e);
                 }
             }
-            filterChain.doFilter(request, response);
         }
+        filterChain.doFilter(request, response);
     }
 }
