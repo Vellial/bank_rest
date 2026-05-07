@@ -13,19 +13,13 @@ REST API для управления банковскими картами.
 docker-compose up -d
 ```
 
-- **Приложение**: `http://localhost:8080`
+- **Приложение**: `http://localhost:8081`
 - **PostgreSQL**: `localhost:5432`
 
 ### Запуск локально
-Настройте 'application.yml':
-```yaml
-spring:
-datasource:
-url: jdbc:postgresql://localhost:5432/bankrest
-username: postgres
-password: postgres
-```
+Локально (без Docker)
+Создайте пустую БД bankrest в PostgreSQL и запустите приложение через IDE или mvn spring-boot:run.
 
 #### API документация
-• Swagger UI: http://localhost:8080/swagger-ui.html
-• OpenAPI JSON: http://localhost:8080/v3/api-docs
+- Swagger UI: http://localhost:8081/swagger-ui.html
+- OpenAPI JSON: http://localhost:8081/v3/api-docs
